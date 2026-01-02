@@ -2,7 +2,14 @@ stages:
   - build
   - deploy
 
-# To zadanie realizuje punkt 7.2.1 i 7.2.2
+variables:
+  # --- NAPRAWA BŁĘDU ---
+  # Wyłączamy wymuszanie certyfikatów TLS dla Docker-in-Docker
+  DOCKER_TLS_CERTDIR: ""
+  # ---------------------
+  APP_SERVER_IP: "192.168.88.105"
+  APP_USER: "msr"
+
 build-image:
   stage: build
   image: docker:latest
@@ -10,17 +17,30 @@ build-image:
     - docker:dind
   script:
     - echo "Budowanie obrazu..."
-    # 7.2.1 Create application Docker Image
     - docker build -t python-app:latest .
-    # 7.2.2 Compress the Image to .tar
     - docker save -o python-app.tar python-app:latest
   artifacts:
     paths:
       - python-app.tar
     expire_in: 1 hour
 
-# Tu będzie sekcja deploy (SCP), ale najpierw sprawdźmy czy build działa
-test-deploy:
+deploy-job:
   stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    # Dodajemy klucz z Twojej zmiennej w GitLabie
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
   script:
-    - echo "Tu będzie wysyłanie na App-Server (SCP)"
+    - echo "Wysyłanie na App-Server ($APP_SERVER_IP)..."
+    - scp python-app.tar $APP_USER@$APP_SERVER_IP:/home/$APP_USER/
+    
+    - echo "Uruchamianie na App-Serverze..."
+    - ssh $APP_USER@$APP_SERVER_IP "docker stop python-app || true"
+    - ssh $APP_USER@$APP_SERVER_IP "docker rm python-app || true"
+    - ssh $APP_USER@$APP_SERVER_IP "docker load -i /home/$APP_USER/python-app.tar"
+    - ssh $APP_USER@$APP_SERVER_IP "docker run -d -p 8080:8080 --name python-app python-app:latest"
