@@ -1,0 +1,26 @@
+stages:
+  - build
+  - deploy
+
+# To zadanie realizuje punkt 7.2.1 i 7.2.2
+build-image:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "Budowanie obrazu..."
+    # 7.2.1 Create application Docker Image
+    - docker build -t python-app:latest .
+    # 7.2.2 Compress the Image to .tar
+    - docker save -o python-app.tar python-app:latest
+  artifacts:
+    paths:
+      - python-app.tar
+    expire_in: 1 hour
+
+# Tu będzie sekcja deploy (SCP), ale najpierw sprawdźmy czy build działa
+test-deploy:
+  stage: deploy
+  script:
+    - echo "Tu będzie wysyłanie na App-Server (SCP)"
