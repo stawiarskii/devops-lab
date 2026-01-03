@@ -17,7 +17,7 @@ build-image:
     - docker:dind
   script:
     - echo "Budowanie obrazu..."
-    - docker build -t python-app:latest .
+    - docker build --network=host -t python-app:latest .
     - docker save -o python-app.tar python-app:latest
   artifacts:
     paths:
