@@ -46,4 +46,4 @@ deploy-job:
     - ssh $APP_USER@$APP_SERVER_IP "docker stop python-app || true"
     - ssh $APP_USER@$APP_SERVER_IP "docker rm python-app || true"
     - ssh $APP_USER@$APP_SERVER_IP "docker load -i /home/$APP_USER/python-app.tar"
-    - ssh $APP_USER@$APP_SERVER_IP "docker run -d -p 8080:8080 --name python-app python-app:latest"
+    - ssh $APP_USER@$APP_SERVER_IP "docker run -d -p 8080:8080 --restart always --name python-app python-app:latest"
