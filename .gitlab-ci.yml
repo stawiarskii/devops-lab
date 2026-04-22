@@ -12,10 +12,10 @@ variables:
 build-image:
   stage: build
   image: docker:latest
-  # --- KLUCZOWA ZMIANA ---
-  # Wymuszamy MTU 1300 wewnątrz Runnera
+
   services:
     - name: docker:dind
+      command: ["--mtu=1300"]
   # -----------------------
   script:
     - echo "Budowanie obrazu..."
