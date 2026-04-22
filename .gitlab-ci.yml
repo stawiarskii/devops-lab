@@ -3,24 +3,16 @@ stages:
   - deploy
 
 variables:
-  # Wyłączamy certyfikaty dla Dockera
-  DOCKER_TLS_CERTDIR: ""
-  # Dane Twojego serwera produkcyjnego
+  DOCKER_HOST: unix:///var/run/docker.sock
   APP_SERVER_IP: "192.168.0.114"
   APP_USER: "msr"
 
 build-image:
   stage: build
   image: docker:latest
-
-  services:
-    - name: docker:dind
-      command: ["--mtu=1300"]
-  # -----------------------
   script:
-    - echo "Budowanie obrazu..."
-    # Dodajemy --network=host dla pewności
-    - docker build --network=host -t python-app:latest .
+    - echo "Budowanie obrazu przy użyciu głównego demona Dockera..."
+    - docker build -t python-app:latest .
     - docker save -o python-app.tar python-app:latest
   artifacts:
     paths:
@@ -39,19 +31,10 @@ deploy-job:
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
   script:
     - echo "Wdrażanie aplikacji i bazy Redis..."
-    # 1. Wgrywamy nowy obraz aplikacji na serwer (zostaw to, co miałeś wcześniej, np. scp i docker load)
     - scp -o StrictHostKeyChecking=no python-app.tar $APP_USER@$APP_SERVER_IP:/home/$APP_USER/
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker load -i /home/$APP_USER/python-app.tar"
-    
-    # 2. Czyścimy stare kontenery (żeby nie było konfliktów)
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker rm -f python-app || true"
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker rm -f redis || true"
-    
-    # 3. Tworzymy wewnętrzną sieć Dockerową (jeśli istnieje, || true zapobiegnie błędowi)
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker network create app-network || true"
-    
-    # 4. Uruchamiamy Redisa w naszej nowej sieci i dodajemy Volume!
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker run -d --name redis --network app-network -v redis_data:/data --restart always redis:latest"
-    
-    # 5. Uruchamiamy Twoją aplikację w TEJ SAMEJ sieci
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker run -d --name python-app --network app-network -p 8080:8080 --restart always python-app:latest"
