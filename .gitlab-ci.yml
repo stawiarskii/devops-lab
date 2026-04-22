@@ -39,11 +39,20 @@ deploy-job:
     - chmod 700 ~/.ssh
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
   script:
-    - echo "Wysyłanie na App-Server ($APP_SERVER_IP)..."
-    - scp python-app.tar $APP_USER@$APP_SERVER_IP:/home/$APP_USER/
+    - echo "Wdrażanie aplikacji i bazy Redis..."
+    # 1. Wgrywamy nowy obraz aplikacji na serwer (zostaw to, co miałeś wcześniej, np. scp i docker load)
+    - scp -o StrictHostKeyChecking=no python-app.tar $APP_USER@$APP_SERVER_IP:/home/$APP_USER/
+    - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker load -i /home/$APP_USER/python-app.tar"
     
-    - echo "Uruchamianie na App-Serverze..."
-    - ssh $APP_USER@$APP_SERVER_IP "docker stop python-app || true"
-    - ssh $APP_USER@$APP_SERVER_IP "docker rm python-app || true"
-    - ssh $APP_USER@$APP_SERVER_IP "docker load -i /home/$APP_USER/python-app.tar"
-    - ssh $APP_USER@$APP_SERVER_IP "docker run -d -p 8080:8080 --restart always --name python-app python-app:latest"
+    # 2. Czyścimy stare kontenery (żeby nie było konfliktów)
+    - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker rm -f python-app || true"
+    - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker rm -f redis || true"
+    
+    # 3. Tworzymy wewnętrzną sieć Dockerową (jeśli istnieje, || true zapobiegnie błędowi)
+    - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker network create app-network || true"
+    
+    # 4. Uruchamiamy Redisa w naszej nowej sieci i dodajemy Volume!
+    - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker run -d --name redis --network app-network -v redis_data:/data --restart always redis:latest"
+    
+    # 5. Uruchamiamy Twoją aplikację w TEJ SAMEJ sieci
+    - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker run -d --name python-app --network app-network -p 8080:8080 --restart always python-app:latest"

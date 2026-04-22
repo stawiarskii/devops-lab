@@ -1,12 +1,21 @@
 from flask import Flask
-import os
+import redis
 
 app = Flask(__name__)
 
+# Nawiązujemy połączenie z bazą Redis
+# Zauważ, że host to po prostu słowo 'redis', a nie adres IP!
+cache = redis.Redis(host='redis', port=6379)
+
 @app.route('/')
 def hello():
-    return "<h1>Wersja 2.0 - CI/CD działa automatycznie!</h1>"
+    try:
+        # Próbujemy zwiększyć licznik o nazwie 'hits' w bazie
+        count = cache.incr('hits')
+        return f"Witaj na produkcji! Ta strona zostala odwiedzona {count} razy.\n"
+    except redis.exceptions.ConnectionError:
+        # Ten blok wykona się, jeśli baza Redis będzie wyłączona
+        return "Witaj! Aplikacja dziala, ale nie moze polaczyc sie z baza Redis.\n"
 
 if __name__ == '__main__':
-    # Uruchamiamy na porcie 8080 i na wszystkich interfejsach (0.0.0.0)
     app.run(host='0.0.0.0', port=8080)
