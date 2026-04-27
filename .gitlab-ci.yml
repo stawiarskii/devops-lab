@@ -35,5 +35,5 @@ deploy-job:
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker rm -f python-app || true"
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker rm -f redis || true"
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker network create app-network || true"
-    - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker run -d --name redis --network app-network -v redis_data:/data --restart always redis:latest"
+    - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker run -d --name redis --network app-network -v redis_data:/data --restart always redis:latest redis-server --appendonly yes"
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker run -d --name python-app --network app-network -p 8080:8080 --restart always python-app:latest"
