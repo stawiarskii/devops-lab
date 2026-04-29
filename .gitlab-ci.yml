@@ -31,8 +31,8 @@ deploy-job:
   script:
     - echo "Wdrażanie aplikacji, bazy Redis i serwera NGINX (SSL)..."
     - mkdir -p nginx/ssl
-    - echo "$SSL_CERTIFICATE" > nginx/ssl/app.crt
-    - echo "$SSL_PRIVATE_KEY" > nginx/ssl/app.key
+    - cp $SSL_CERTIFICATE nginx/ssl/app.crt
+    - cp $SSL_PRIVATE_KEY nginx/ssl/app.key
     - scp -r nginx/ $APP_USER@$APP_SERVER_IP:/home/$APP_USER/
     - scp -o StrictHostKeyChecking=no python-app.tar $APP_USER@$APP_SERVER_IP:/home/$APP_USER/
     - ssh -o StrictHostKeyChecking=no $APP_USER@$APP_SERVER_IP "docker load -i /home/$APP_USER/python-app.tar"
