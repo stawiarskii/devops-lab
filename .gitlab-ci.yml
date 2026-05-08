@@ -1,4 +1,5 @@
 stages:
+  - test
   - build
   - deploy
 
@@ -6,6 +7,14 @@ variables:
   DOCKER_HOST: unix:///var/run/docker.sock
   APP_SERVER_IP: "192.168.0.114"
   APP_USER: "msr"
+
+test-code:
+  stage: test
+  image: python:3.9-slim
+  script:
+    - echo "Uruchamianie skanera jakości kodu"
+    - pip install flake8
+    - flake8 app.py --max-line-length=120
 
 build-image:
   stage: build
