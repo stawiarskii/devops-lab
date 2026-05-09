@@ -31,19 +31,13 @@ build-image:
 
 security-scan:
   stage: security
-  image:
-    name: aquasec/trivy:latest
-    entrypoint: [""]
-  variables:
-    TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.trivycache"
-  cache:
-    key: trivy-db-cache
-    paths:
-      - .trivycache
-    when: always
+  image: docker:latest
   script:
+    - echo "Ładowanie obrazu z pliku .tar do demona Dockera..."
+    - docker load -i python-app.tar
+    
     - echo "Prześwietlanie obrazu w poszukiwaniu luk bezpieczeństwa (CVE)..."
-    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress --timeout 20m --db-repository ghcr.io/aquasecurity/trivy-db:2
+    - docker run --rm --network=host -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image python-app:latest --severity CRITICAL --exit-code 1 --no-progress
 
 deploy-job:
   stage: deploy
