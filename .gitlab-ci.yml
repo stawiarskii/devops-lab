@@ -35,7 +35,6 @@ security-scan:
   script:
     - echo "Ładowanie obrazu z pliku .tar do demona Dockera..."
     - docker load -i python-app.tar
-    
     - echo "Prześwietlanie obrazu w poszukiwaniu luk bezpieczeństwa (CVE)..."
     - docker run --rm --network=host -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image python-app:latest --severity CRITICAL --exit-code 1 --no-progress
 
