@@ -61,7 +61,7 @@ graph TD
     Deploy -.->|"Status change"| Discord
     
     Grafana -.->|"Metrics collection"| Production
-    ```
+```
 
 ### Tech Stack & Tools
 * **CI/CD:** GitLab CI/CD, GitLab Runners
