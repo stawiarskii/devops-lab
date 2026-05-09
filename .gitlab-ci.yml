@@ -35,15 +35,15 @@ security-scan:
     name: aquasec/trivy:latest
     entrypoint: [""]
   variables:
-    TRIVY_CACHE_DIR: ".trivycache/"
+    TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.trivycache"
   cache:
     key: trivy-db-cache
     paths:
-      - .trivycache/
+      - .trivycache
     when: always
   script:
     - echo "Prześwietlanie obrazu w poszukiwaniu luk bezpieczeństwa (CVE)..."
-    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress --timeout 15m
+    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress --timeout 20m --db-repository ghcr.io/aquasecurity/trivy-db:2
 
 deploy-job:
   stage: deploy
