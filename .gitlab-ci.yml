@@ -34,9 +34,16 @@ security-scan:
   image:
     name: aquasec/trivy:latest
     entrypoint: [""]
+  variables:
+    TRIVY_CACHE_DIR: ".trivycache/"
+  cache:
+    key: trivy-db-cache
+    paths:
+      - .trivycache/
+    when: always
   script:
-    - echo "Prześwietlanie obrazu w poszukiwaniu luk bezpieczeństwa"
-    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --db-repository public.ecr.aws/aquasecurity/trivy-db:2
+    - echo "Prześwietlanie obrazu w poszukiwaniu luk bezpieczeństwa (CVE)..."
+    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress --timeout 15m
 
 deploy-job:
   stage: deploy
