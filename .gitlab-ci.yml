@@ -36,7 +36,7 @@ security-scan:
     entrypoint: [""]
   script:
     - echo "Prześwietlanie obrazu w poszukiwaniu luk bezpieczeństwa"
-    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress
+    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress --timeout 15m
 
 deploy-job:
   stage: deploy
