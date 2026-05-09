@@ -1,6 +1,7 @@
 stages:
   - test
   - build
+  - security
   - deploy
 
 variables:
@@ -27,6 +28,15 @@ build-image:
     paths:
       - python-app.tar
     expire_in: 1 hour
+
+security-scan:
+  stage: security
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - echo "Prześwietlanie obrazu w poszukiwaniu luk bezpieczeństwa"
+    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress
 
 deploy-job:
   stage: deploy
