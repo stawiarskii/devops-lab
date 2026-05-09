@@ -36,7 +36,7 @@ security-scan:
     entrypoint: [""]
   script:
     - echo "Prześwietlanie obrazu w poszukiwaniu luk bezpieczeństwa"
-    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress --timeout 15m
+    - trivy image --input python-app.tar --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --db-repository public.ecr.aws/aquasecurity/trivy-db:2
 
 deploy-job:
   stage: deploy
